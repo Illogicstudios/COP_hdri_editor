@@ -118,7 +118,7 @@ def run(kwargs):
         # a lot of errors, it's seems related to the way houdini handle his viewer state 
         # and mess up the light handle one.
 
-        light.setCurrent(True)
+        # light.setCurrent(True)
         light.moveToGoodPosition()
 
     else:
