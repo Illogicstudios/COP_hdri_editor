@@ -123,8 +123,8 @@ def computeUV(light_position: np.ndarray):
     theta = math.asin(max(-1, min(1, normalized_light_position[1])))
     
     phi += math.pi * -0.5
-    
-    u = phi / (2.0*math.pi) + 0.5
+
+    u = ( (phi / (2.0 * math.pi)) + 0.5 ) % 1.0
     v = 0.5 - (theta/math.pi)
     v = 1 - v
 
