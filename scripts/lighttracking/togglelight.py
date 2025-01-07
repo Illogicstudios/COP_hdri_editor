@@ -118,8 +118,24 @@ def run(kwargs):
         # a lot of errors, it's seems related to the way houdini handle his viewer state 
         # and mess up the light handle one.
 
-        # light.setCurrent(True)
-        light.moveToGoodPosition()
+        # Set light node position close the hdri copnet
+        hdri_cop_net_node = mapping_node.parent()
+        if (hdri_cop_net_node):
+            offset = hou.Vector2(0, -1)
+            parent_position = hdri_cop_net_node.position()
+
+            light.setPosition(parent_position + offset)
+
+            scene_viewer = hou.ui.paneTabOfType(hou.paneTabType.SceneViewer)
+
+            if scene_viewer:
+                scene_viewer.setPwd(stage)
+            light.setSelected(True, clear_all_selected=True) 
+
+        else:
+            # Fallback if for some unknown reasons we cannot select the hdri copnet
+
+            light.moveToGoodPosition()
 
     else:
         
