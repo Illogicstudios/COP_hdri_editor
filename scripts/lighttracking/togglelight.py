@@ -167,4 +167,4 @@ def selectLight(kwargs):
 
         if scene_viewer:
             scene_viewer.setPwd(stage)
-        light.setSelected(True, clear_all_selected=True) 
+        light[0].setSelected(True, clear_all_selected=True) 
