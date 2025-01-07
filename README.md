@@ -34,3 +34,7 @@ Tips : You can pin your scene to keep seeing your scene\
 5 - If you lose your light you can select it again with the Select Light button :\
 ![image](https://github.com/user-attachments/assets/dd7a0969-daa5-46b7-b397-58bb4aaa97d3)
 
+## Installation
+
+To use this recipes you need to copy the lighttracking module somewhere Houdini can parse you python script.
+For more details : [https://www.sidefx.com/docs/houdini/hom/locations.html](https://www.sidefx.com/docs/houdini/hom/locations.html)
