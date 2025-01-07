@@ -65,7 +65,7 @@ def run(kwargs):
 
     is_enable = True if kwargs[TOGGLE_VALUE] == 'on' else False
 
-    # Fetch null node HDRI_LIGHT
+    # Fetch light node if it exist
     mapping_node = kwargs['node']
 
     if not mapping_node:
@@ -148,3 +148,23 @@ def run(kwargs):
 
         light = light[0]
         light.destroy()
+
+
+def selectLight(kwargs):
+    # Fetch null node HDRI_LIGHT
+    mapping_node = kwargs['node']
+
+    if not mapping_node:
+        return
+
+    light_name = f"{HDRI_LIGHTS}_{mapping_node.name()}"
+    matcher = parser.parse_query(light_name)
+    stage = hou.node("/stage/")
+    light = matcher.nodes(stage)
+
+    if light:
+        scene_viewer = hou.ui.paneTabOfType(hou.paneTabType.SceneViewer)
+
+        if scene_viewer:
+            scene_viewer.setPwd(stage)
+        light.setSelected(True, clear_all_selected=True) 
