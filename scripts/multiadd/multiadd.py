@@ -43,6 +43,8 @@ def onInputChanged(kwargs):
         if connection.outputIndex() == input_to_connect:
             connection.outputNode().setInput(
                 connection.inputIndex(), None)
+            
+            print("Clear an existing connections")
             break
 
     # Get every blend node in subnet with mode add
@@ -95,8 +97,14 @@ def onInputChanged(kwargs):
 
     # Try to connect to a node with a free slot
     if add_nodes_with_free_input:
-        add_nodes_with_free_input[0]\
-            .setNextInput(inputs_node, input_to_connect)
+        print("Plug to a free input")
+
+        for input_index, connectors in enumerate(
+            add_nodes_with_free_input[0].inputConnectors()):
+            if len(connectors) == 0 and input_index != 2:
+                add_nodes_with_free_input[0].setInput(
+                    input_index, inputs_node, input_to_connect)
+                break
     # Else add a new blend node with add type
     else:
         if add_node_connected_to_output  is not None:
