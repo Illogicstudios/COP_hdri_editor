@@ -16,7 +16,8 @@ def onInputChanged(kwargs):
 
     # Check if the context is correct
     if "node" not in kwargs or "input_index" not in kwargs:
-        raise KeyError("Missing required keys in kwargs: 'node' or 'input_index'")
+        raise KeyError(
+            "Missing required keys in kwargs: 'node' or 'input_index'")
 
     subnet = kwargs["node"]
 
@@ -38,17 +39,23 @@ def onInputChanged(kwargs):
 
     # Get every blend node in subnet with mode add
     add_nodes = []
+    add_nodes_with_free_input = []
     add_node_connected_to_output  = None
-    add_node_with_free_input  = None
 
     for child in subnet.children():
         if (child.type().name() == BLENDTYPE)\
             and (child.parm("mode").eval() == ADDMODE):
             add_nodes.append(child)
-            if len(child.outputs()) == 1:
+
+            # Get every valid input and output
+            child_inputs = [input for input in child.inputs()
+                             if input is not None]
+            child_outputs = [output for output in child.outputs()
+                              if output is not None]
+            if len(child_inputs) == 1:
+                add_nodes_with_free_input.append(child)
+            if len(child_outputs) == 1:
                 add_node_connected_to_output  = child
-            if len(child.inputs()) == 1:
-                add_node_with_free_input  = child
 
     # Check if the input changed was a new connection
     input_to_connect = kwargs["input_index"]
@@ -63,13 +70,31 @@ def onInputChanged(kwargs):
         
         # Delete every add node with no connection in input
         cleanAdd(add_nodes)
+
+        # Rewire every node that have only one connection and
+        # if that's connection input is fg
+        for add_node in add_nodes:
+            add_node_inputs = [input for input in add_node.inputs()
+                                if input is not None]
+            
+            if len(add_node_inputs) == 1:
+                connection = add_node.inputConnections()[0]
+                # If the only connection of the node is on fg
+                # Then swap it to bg
+                if connection.inputIndex() == 1:
+                    add_node.setInput(0,
+                                    connection.inputNode(),
+                                    connection.outputIndex())
+                    add_node.setInput(1, None)
+
         subnet.layoutChildren()
         return 
 
 
     # Try to connect to a node with a free slot
-    if add_node_with_free_input  is not None:
-        add_node_with_free_input .setNextInput(inputs_node, input_to_connect)
+    if add_nodes_with_free_input:
+        add_nodes_with_free_input[0]\
+            .setNextInput(inputs_node, input_to_connect)
     # Else add a new blend node with add type
     else:
         if add_node_connected_to_output  is not None:
