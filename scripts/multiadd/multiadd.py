@@ -20,6 +20,7 @@ def onInputChanged(kwargs):
             "Missing required keys in kwargs: 'node' or 'input_index'")
 
     subnet = kwargs["node"]
+    input_to_connect = kwargs["input_index"]
 
     # Parse subnet inputs and outputs and leave if we cant
     inputs_node = None
@@ -36,6 +37,13 @@ def onInputChanged(kwargs):
     if (inputs_node is None or outputs_node is None):
         print("Could not find inputs or outputs node")
         return
+    
+    # Clear already existing connection
+    for connection in inputs_node.outputConnections():
+        if connection.outputIndex() == input_to_connect:
+            connection.outputNode().setInput(
+                connection.inputIndex(), None)
+            break
 
     # Get every blend node in subnet with mode add
     add_nodes = []
@@ -58,15 +66,9 @@ def onInputChanged(kwargs):
                 add_node_connected_to_output  = child
 
     # Check if the input changed was a new connection
-    input_to_connect = kwargs["input_index"]
     connecting = subnet.input(input_to_connect) is not None
 
     if not connecting:
-        for connection in inputs_node.outputConnections():
-            if connection.outputIndex() == input_to_connect:
-                connection.outputNode().setInput(
-                    connection.inputIndex(), None)
-                break
         
         # Delete every add node with no connection in input
         cleanAdd(add_nodes)
