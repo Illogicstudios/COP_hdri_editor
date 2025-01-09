@@ -166,5 +166,6 @@ def createBlend(subnet, config_node=None):
         return blend
     else:
         blend = subnet.copyItems([config_node], channel_reference_originals=True)[0]
+        hou.clearAllSelected()
         return blend
 
