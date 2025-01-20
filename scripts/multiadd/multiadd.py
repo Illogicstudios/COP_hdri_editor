@@ -6,14 +6,15 @@ ADDMODE = 3
 CONFIG_NODE_NAME = "config_blend"
 
 def onInputChanged(kwargs):
-    """
-    Callback on a multi blend subnetwork which will adjust the blend
-    connections.
+    """Callback on a multi blend subnetwork which 
+    will adjust the number of blend connections.
 
-    More specifically a multi blend subnetwork is a basic subnetwork
-    where you can blend multiples layers in input into a single layer.
+    Args:
+        kwargs (dict): Subnetwork context
 
-    :param kwargs: Subnetwork context
+    Raises:
+        KeyError: Cannot find necessary informations in kwargs
+        KeyError: Cannot find input or ouput not in the subnet
     """
 
     # Check if the context is correct
@@ -21,7 +22,7 @@ def onInputChanged(kwargs):
         raise KeyError(
             "Missing required keys in kwargs: 'node' or 'input_index'")
 
-    subnet = kwargs["node"]
+    subnet: hou.Node = kwargs["node"]
     input_to_connect = kwargs["input_index"]
 
     # Parse subnet inputs and outputs and leave if we cant
@@ -37,8 +38,7 @@ def onInputChanged(kwargs):
             break
 
     if (inputs_node is None or outputs_node is None):
-        print("Could not find inputs or outputs node")
-        return
+        raise KeyError("Could not find input or output node")
     
     # Clear already existing connection
     for connection in inputs_node.outputConnections():
@@ -47,7 +47,11 @@ def onInputChanged(kwargs):
                 connection.inputIndex(), None)
             break
 
-    # Get every blend node in subnet
+    ## Parse all blend nodes
+    # and parse 3 types of blend node:
+    # 1 - Blend nodes with an input in fg or bg free
+    # 2 - Blend node connected to the final output
+    # 3 - Blend node named config_node
     blend_nodes = []
     blend_nodes_with_free_input = []
     blend_node_connected_to_output  = None
@@ -70,16 +74,17 @@ def onInputChanged(kwargs):
             if len(child_inputs) == 1:
                 blend_nodes_with_free_input.append(child)
             if len(child_outputs) == 1:
-                blend_node_connected_to_output  = child
+                if (child_outputs[0].type().name() == "output"):
+                    blend_node_connected_to_output  = child
+
+    # Clean useless blend nodes
+    cleanBlend(blend_nodes)
 
     # Check if the input changed was a new connection
     connecting = subnet.input(input_to_connect) is not None
 
+    # If an input has been disconnect, we need to clean the subnetwork
     if not connecting:
-        
-        # Delete every blend node with no connection in input
-        cleanBlend(blend_nodes)
-
         # Rewire every node that have only one connection and
         # if that's connection input is fg
         for blend_node in blend_nodes:
@@ -96,11 +101,10 @@ def onInputChanged(kwargs):
                                     connection.outputIndex())
                     blend_node.setInput(1, None)
 
-        subnet.layoutChildren()
-        return 
-
-
-    # Try to connect to a node with a free slot
+        updateLayout(subnet, inputs_node, config_node)
+        return
+    
+    # Try to connect to a node with a free input
     if blend_nodes_with_free_input:
         for input_index, connectors in enumerate(
             blend_nodes_with_free_input[0].inputConnectors()):
@@ -110,7 +114,7 @@ def onInputChanged(kwargs):
                 break
     # Else add a new blend node
     else:
-        if blend_node_connected_to_output  is not None:
+        if blend_node_connected_to_output is not None:
 
             outputs_node.setInput(0, None)
 
@@ -129,19 +133,40 @@ def onInputChanged(kwargs):
 
             for blend in blend_nodes:
                 if not len(blend.outputs()):
-                    blend_node_connected_to_output  = blend
+                    blend_node_connected_to_output = blend
 
             if blend_node_connected_to_output  is not None:
                 new_blend.setInput(1, blend_node_connected_to_output)
     
-    subnet.layoutChildren()
+    updateLayout(subnet, inputs_node, config_node)
    
 
-def cleanBlend(blend_nodes):
-    """
-    Clean recursively every node that does not have inputs.
+def updateLayout(
+        subnet: hou.Node, input_nodes: hou.Node=None,
+        config_node: hou.Node=None):
+    """Layout nodes in the subnet nicely.
 
-    :param blend_nodes: List of blend nodes
+    Args:
+        subnet (hou.Node): Multi blend subnetwork
+        input_nodes (hou.Node, optional): input node of subnet. Defaults to None.
+        config_node (hou.Node, optional): Blend node that serve as config node. Defaults to None.
+    """
+    subnet.layoutChildren()
+
+    if config_node is None or input_nodes is None:
+        return
+
+    offset = hou.Vector2(0, -2)
+    parent_position = input_nodes.position()
+
+    config_node.setPosition(parent_position + offset)
+
+
+def cleanBlend(blend_nodes: list):
+    """Clean recursively every node that does not have inputs.
+
+    Args:
+        blend_nodes (list): List of blend nodes
     """
     to_delete = [blend for blend in blend_nodes if not blend.inputs()]
     while to_delete:
@@ -153,11 +178,19 @@ def cleanBlend(blend_nodes):
         to_delete = [blend for blend in blend_nodes if not blend.inputs()]
 
 
-def createBlend(subnet, config_node=None):
-    """
-    Create a node blend with mode blend.
+def createBlend(subnet: hou.Node, config_node: hou.Node=None):
+    """Create a blend node with a specific context.
 
-    :param subnet: Multi blend subnetwork
+    Default: mode set to add
+
+    Optionnaly: Same parameters as config_node
+    
+    Args:
+        subnet (hou.Node): Multi blend subnetwork
+        config_node (hou.Node, optional): A blend to copy. Defaults to None.
+
+    Returns:
+        hou.Node: Created blend node
     """
 
     if config_node is None:
@@ -165,7 +198,8 @@ def createBlend(subnet, config_node=None):
         blend.parm("mode").set(ADDMODE)
         return blend
     else:
-        blend = subnet.copyItems([config_node], channel_reference_originals=True)[0]
+        blend = subnet.copyItems(
+            [config_node], channel_reference_originals=True)[0]
         hou.clearAllSelected()
         return blend
 
