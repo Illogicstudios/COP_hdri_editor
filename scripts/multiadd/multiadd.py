@@ -106,21 +106,28 @@ def onInputChanged(kwargs):
     
     # Try to connect to a node with a free input
     if blend_nodes_with_free_input:
-        for input_index, connectors in enumerate(
-            blend_nodes_with_free_input[0].inputConnectors()):
-            if len(connectors) == 0 and input_index != 2:
-                blend_nodes_with_free_input[0].setInput(
-                    input_index, inputs_node, input_to_connect)
-                break
+        free_input_node = None
+
+        for node in blend_nodes_with_free_input:
+            if isValid(node):
+                free_input_node = node
+
+        if isValid(free_input_node):
+            for input_index, connectors in enumerate(
+                blend_nodes_with_free_input[0].inputConnectors()):
+                if len(connectors) == 0 and input_index != 2:
+                    blend_nodes_with_free_input[0].setInput(
+                        input_index, inputs_node, input_to_connect)
+                    break
     # Else add a new blend node
     else:
-        if blend_node_connected_to_output is not None:
+        if isValid(blend_node_connected_to_output):
 
             outputs_node.setInput(0, None)
 
             new_blend = createBlend(subnet, config_node)
 
-            new_blend.setInput(0, blend_node_connected_to_output , 0)
+            new_blend.setInput(0, blend_node_connected_to_output, 0)
             new_blend.setInput(1, inputs_node, input_to_connect)
             outputs_node.setInput(0, new_blend, 0)
 
@@ -128,14 +135,15 @@ def onInputChanged(kwargs):
         # we need output our new blend here
         else:
             new_blend = createBlend(subnet, config_node)
-            new_blend.setInput(0, inputs_node, 0)
+            new_blend.setInput(0, inputs_node, input_to_connect)
             subnet.subnetOutputs()[0].setInput(0, new_blend, 0)
 
             for blend in blend_nodes:
                 if not len(blend.outputs()):
-                    blend_node_connected_to_output = blend
+                    if (isValid(blend)):
+                        blend_node_connected_to_output = blend
 
-            if blend_node_connected_to_output  is not None:
+            if isValid(blend_node_connected_to_output):
                 new_blend.setInput(1, blend_node_connected_to_output)
     
     updateLayout(subnet, inputs_node, config_node)
@@ -148,8 +156,8 @@ def updateLayout(
 
     Args:
         subnet (hou.Node): Multi blend subnetwork
-        input_nodes (hou.Node, optional): input node of subnet. Defaults to None.
-        config_node (hou.Node, optional): Blend node that serve as config node. Defaults to None.
+        input_nodes (hou.Node, optional): Subnet input node. Defaults to None.
+        config_node (hou.Node, optional): Config node. Defaults to None.
     """
     subnet.layoutChildren()
 
@@ -161,6 +169,26 @@ def updateLayout(
 
     config_node.setPosition(parent_position + offset)
 
+
+def isValid(node: hou.Node) -> bool:
+    """Check if a node has been destroyed
+
+    Args:
+        node (hou.Node): Node that need to be checked
+    
+    Returns:
+        hou.Node: True if the node exists, False otherwise.
+    """
+
+    if node is None:
+        return False
+
+    try:
+        node.path()
+    except hou.ObjectWasDeleted:
+        return False
+
+    return True
 
 def cleanBlend(blend_nodes: list):
     """Clean recursively every node that does not have inputs.
@@ -178,7 +206,7 @@ def cleanBlend(blend_nodes: list):
         to_delete = [blend for blend in blend_nodes if not blend.inputs()]
 
 
-def createBlend(subnet: hou.Node, config_node: hou.Node=None):
+def createBlend(subnet: hou.Node, config_node: hou.Node=None) -> hou.Node:
     """Create a blend node with a specific context.
 
     Default: mode set to add
