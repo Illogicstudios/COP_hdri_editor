@@ -156,7 +156,7 @@ def updateLayout(
     if config_node is None or input_nodes is None:
         return
 
-    offset = hou.Vector2(0, -2)
+    offset = hou.Vector2(0, -3)
     parent_position = input_nodes.position()
 
     config_node.setPosition(parent_position + offset)
