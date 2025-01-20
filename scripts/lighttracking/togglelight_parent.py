@@ -71,7 +71,7 @@ def run(kwargs):
     if not mapping_node:
         return
 
-    light_name = f"{HDRI_LIGHTS}_{mapping_node.name()}"
+    light_name = f"{mapping_node.parent().parent().name()}_{mapping_node.parent().name()}"
     matcher = parser.parse_query(light_name)
     stage = hou.node("/stage/")
     light = matcher.nodes(stage)
@@ -151,6 +151,7 @@ def run(kwargs):
 
 
 def selectLight(kwargs):
+    print("selectLight")
     # Fetch null node HDRI_LIGHT
     mapping_node = kwargs['node']
 
@@ -158,6 +159,7 @@ def selectLight(kwargs):
         return
 
     light_name = f"{mapping_node.parent().parent().name()}_{mapping_node.parent().name()}"
+    print (light_name)
     matcher = parser.parse_query(light_name)
     stage = hou.node("/stage/")
     light = matcher.nodes(stage)
