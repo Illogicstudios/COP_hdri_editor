@@ -5,7 +5,7 @@ HDRI editor in Copernicus (houdini)
 
 This recipe allows the user to edit an HDRI in Copernicus with extra functions.
 
-https://github.com/user-attachments/assets/9fd6f6ee-1e30-49da-b41d-e3f36a47bd4a
+https://github.com/user-attachments/assets/cd30ada7-e5e0-40cc-996d-e47830892dc5
 
 ## Features
 
