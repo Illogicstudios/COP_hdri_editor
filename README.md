@@ -5,18 +5,20 @@ HDRI editor in Copernicus (houdini)
 
 This recipe allows the user to edit an HDRI in Copernicus with extra functions.
 
-https://github.com/user-attachments/assets/3bd7a109-5867-4ba7-841d-f565a93c4d86
+https://github.com/user-attachments/assets/cd30ada7-e5e0-40cc-996d-e47830892dc5
 
 ## Features
 
-- Edit with UV or light position
+- Edit light settings with light_maker node
+- Preview your HDRI directly in your scene
 - Toggle a fake Houdini light to help the user editing light
-- Modify light settings
-- Modify light transformation
 
 ## Installation
 
-To use this recipes you need to copy the lighttracking module somewhere Houdini can parse you python script.
+Simply add hda located in `./hda/` in your otls/hda houdini location.
+
+If you want to use the multi add node in `./template/HDRI_cop_editor.hip` 
+you will need to add the `./scripts/` somewhere Houdini can parse you python script.
 For more details : [https://www.sidefx.com/docs/houdini/hom/locations.html](https://www.sidefx.com/docs/houdini/hom/locations.html)
 
 ## How to use it
@@ -26,11 +28,11 @@ For more details : [https://www.sidefx.com/docs/houdini/hom/locations.html](http
 
 Tips: You can pin your scene to keep seeing it
 
-2 - Select the Key_Name subnetwork, it is the node that will map equirectangular UV from your lights :
-![image](https://github.com/user-attachments/assets/687eeda1-9529-4406-90aa-8927eb7cc541)
+2 - Create a Light Maker 2 Node (Please ignore the Light Maker node here):\
+![navigation](https://github.com/user-attachments/assets/5166abcc-5a80-4977-a836-b9d6cadd8690)
 
-3 - Here you can modify your light transformation manually :\
-![image](https://github.com/user-attachments/assets/73e8e5a9-b76f-4255-8e10-e2f94645f0d8)
+3 - Here you can edit light settings\
+![light_settings](https://github.com/user-attachments/assets/3bd142c3-9d46-4b1c-a8ee-be7bec3c63d3)
 
 4 - You can also tick the Toggle Light to edit the light position in 3D with houdini light handler :\
 ![image](https://github.com/user-attachments/assets/efb5216d-5ad4-4946-a590-1e2da1f4a319) \
